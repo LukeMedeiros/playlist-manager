@@ -7,7 +7,6 @@ from pathlib import Path
 
 deezer_auth = Blueprint('deezer_auth', __name__, template_folder='templates')
 
-# folder = Path("secrets/")
 secrets_file = open("secrets/deezer_client_secret.json")
 secrets = json.load(secrets_file)
 

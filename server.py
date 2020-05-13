@@ -3,6 +3,7 @@ import flask
 import requests
 from routes.youtube_auth import youtube_auth
 from routes.deezer_auth import deezer_auth
+from routes.spotify_auth import spotify_auth
 from routes.sync import  sync
 
 app = flask.Flask(__name__)
@@ -13,6 +14,7 @@ app.secret_key = 'REPLACE ME - this value is here as a placeholder.'
 
 app.register_blueprint(youtube_auth, url_prefix='/youtube')
 app.register_blueprint(deezer_auth, url_prefix='/deezer')
+app.register_blueprint(spotify_auth, url_prefix='/spotify')
 app.register_blueprint(sync, url_prefix='/sync')
 
 if __name__ == '__main__':
