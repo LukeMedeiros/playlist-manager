@@ -43,6 +43,12 @@ class DeezerPlaylistService(PlaylistService):
                 URI = "https://api.deezer.com/search?q=artist:'" + track_artist +"' track:'"+ track_name+"'"
                 res = requests.get(URI)
                 data = res.json()
+
+            if data['total'] == 0:
+                URI = "https://api.deezer.com/search?q=track:" + track.name
+                res = requests.get(URI)
+                data = res.json()
+
             if data['total'] == 0:
                 print('no match: ', track_name, track_artist)
                 continue

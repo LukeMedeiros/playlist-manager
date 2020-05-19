@@ -26,7 +26,7 @@ class PlaylistService(ABC):
         pass 
 
     @abstractmethod
-    def create_playlist(self, playlist_title: str, track_ids: List[int]):
+    def create_playlist(self, playlist_title: str):
         pass 
 
     def remove_paranthesis(self, track_name):

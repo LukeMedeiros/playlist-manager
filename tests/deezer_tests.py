@@ -33,6 +33,12 @@ class RemoveExistingTest(unittest.TestCase):
         cleaned_playlist = self.deezer_service.remove_existing(tracks_to_add, playlist_tracks)
         self.assertEqual([1, 6], cleaned_playlist)
 
+    def test_conflicting_tracks_str(self):
+        tracks_to_add = ['6f88cBp9BBpWGxZGm8iWdm', '2DLqygtisuvhIUeV3aKJSe']
+        playlist_tracks = ['2DLqygtisuvhIUeV3aKJSe']
+        cleaned_playlist = self.deezer_service.remove_existing(tracks_to_add, playlist_tracks)
+        self.assertEqual(['6f88cBp9BBpWGxZGm8iWdm'], cleaned_playlist)
+
 class RemoveDuplicatesTest(unittest.TestCase):
 
     def setUp(self): 
