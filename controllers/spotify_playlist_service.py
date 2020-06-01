@@ -5,12 +5,13 @@ from interfaces.playlist_service import PlaylistService
 import constants
 import requests
 from flask import session
+import json
 
 class SpotifyPlaylistService(PlaylistService):
 
     def get_playlist(self, id): 
         URI = constants.GET_SPOTIFY_PLAYLIST_URI + id
-        header = { "Authorization" : "Bearer" + session[constants.SPOTIFY_CREDENTIALS]}
+        header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
         res = requests.get(URI, headers = header).json()
         
         if "error" in res: 
@@ -35,7 +36,7 @@ class SpotifyPlaylistService(PlaylistService):
         return Playlist(id, title, tracks)
 
     def get_my_playlists(self): 
-        header = { "Authorization" : "Bearer" + session[constants.SPOTIFY_CREDENTIALS]}
+        header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
         res = requests.get(constants.GET_MY_SPOTIFY_PLAYLISTS_URI, headers = header).json()
         
         if "error" in res: 
@@ -53,17 +54,17 @@ class SpotifyPlaylistService(PlaylistService):
         return playlists 
 
     def search_playlist_track(self, query, header): 
-        URI = constants.SEARCH_SPOTIFY + "?q=" + query
+        URI = constants.SEARCH_SPOTIFY + "?q=" + query + "&type=track" 
         res = requests.get(URI, headers = header).json()
         return res
 
     def search_playlist_tracks(self, tracks: Track):
         # need to query without the artist aswell 
         track_ids = []
-        header = { "Authorization" : "Bearer" + session[constants.SPOTIFY_CREDENTIALS]}
+        header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
         for track in tracks: 
             track_name = track.name
-            query = track.artist + " " + track_name + "type=track" 
+            query = track.artist + " " + track_name 
             res = self.search_playlist_track(query, header)
 
             if "error" in res: 
@@ -71,7 +72,7 @@ class SpotifyPlaylistService(PlaylistService):
 
             while track_name != self.remove_paranthesis(track_name) and res["tracks"]["total"] == 0: 
                 track_name = self.remove_paranthesis(track_name)
-                query = "?q=" + track.artist + " " + track_name + "type=track" 
+                query = track.artist + " " + track_name 
                 res = self.search_playlist_track(query, header)
 
             if res["tracks"]["total"] == 0:
@@ -87,7 +88,6 @@ class SpotifyPlaylistService(PlaylistService):
 
     def sync_playlist(self, playlist: Playlist):
         my_playlists = self.get_my_playlists()
-
         track_ids = self.search_playlist_tracks(playlist.tracks)
 
         for my_playlist in my_playlists: 
@@ -97,13 +97,15 @@ class SpotifyPlaylistService(PlaylistService):
                 return res
         
         playlist_id = self.create_playlist(playlist.title)
+        print("playlist_id", playlist_id)
+
         res = self.update_playlist(playlist_id, track_ids)
         return res
 
     def update_playlist(self, playlist_id: int, track_ids: List[int]):
-        header = { "Authorization" : "Bearer" + session[constants.SPOTIFY_CREDENTIALS]}
+        header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
+        # error prone
         playlist = self.get_playlist(playlist_id)
-
         playlist_track_ids = []
         for track in playlist.tracks:
             playlist_track_ids.append(track.id)
@@ -119,8 +121,8 @@ class SpotifyPlaylistService(PlaylistService):
         return tracks_to_add 
 
     def get_current_user(self):
-        header = { "Authorization" : "Bearer" + session[constants.SPOTIFY_CREDENTIALS]}
-        res = requests.post(constants.GET_SPOTIFY_CURRENT_USER, headers = header) 
+        header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
+        res = requests.get(constants.GET_SPOTIFY_CURRENT_USER, headers = header) 
         if(res.ok): 
             return res.json()
         # how to handle this error
@@ -132,10 +134,10 @@ class SpotifyPlaylistService(PlaylistService):
             # still poor error handling 
             return "not authenticated"
         id = user["id"] 
-        header = { "Authorization" : "Bearer" + session[constants.SPOTIFY_CREDENTIALS]}
+        header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
         URI = constants.CREATE_SPOTIFY_PLAYLIST + id + "/playlists"
         body = { "name" : playlist_title}
-        res = requests.post(URI, data = body, headers = header)
+        res = requests.post(URI, data = json.dumps(body), headers = header)
         if(res.ok): 
             return res.json()["id"]
         return "error" 

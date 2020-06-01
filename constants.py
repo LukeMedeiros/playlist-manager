@@ -11,3 +11,7 @@ SEARCH_SPOTIFY = "https://api.spotify.com/v1/search"
 GET_SPOTIFY_CURRENT_USER = "https://api.spotify.com/v1/me"
 CREATE_SPOTIFY_PLAYLIST = "https://api.spotify.com/v1/users/"
 SPOTIFY_CREDENTIALS = "spotify_credentials"
+
+# -----------------------------------------------------------------------------------------------------------------------------
+# sync constants 
+VALID_SERVICES = {"youtube", "deezer", "spotify"}

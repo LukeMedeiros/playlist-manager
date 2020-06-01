@@ -62,10 +62,7 @@ def oauth2callback():
     credentials = flow.credentials
     flask.session['youtube_credentials'] = credentials_to_dict(credentials)
 
-    if 'deezer_credentials' not in flask.session:
-      return flask.redirect(flask.url_for('deezer_auth.test_api_request'))
-    else: 
-      return 'authenticated'
+    return flask.redirect(flask.url_for('spotify_auth.authorize'))
 
   except Exception as err:
     print('something broke: {0}'.format(err) )

@@ -164,20 +164,20 @@ class GetUserTest(unittest.TestCase):
         self.spotify_service = SpotifyPlaylistService()
 
     @patch("controllers.spotify_playlist_service.session")
-    @patch("controllers.spotify_playlist_service.requests.post")
-    def test_get_user_success(self, mock_post, mock_session): 
+    @patch("controllers.spotify_playlist_service.requests.get")
+    def test_get_user_success(self, mock_get, mock_session): 
         mock_session.return_value = None  
-        mock_post.return_value.ok = True 
-        mock_post.return_value.json.return_value = spotify_data.user_json_mock
+        mock_get.return_value.ok = True 
+        mock_get.return_value.json.return_value = spotify_data.user_json_mock
 
         res = self.spotify_service.get_current_user()
         self.assertEqual(spotify_data.user_json_mock, res)
 
     @patch("controllers.spotify_playlist_service.session")
-    @patch("controllers.spotify_playlist_service.requests.post")
-    def test_get_user_failure(self, mock_post, mock_session): 
+    @patch("controllers.spotify_playlist_service.requests.get")
+    def test_get_user_failure(self, mock_get, mock_session): 
         mock_session.return_value = None  
-        mock_post.return_value.ok = False 
+        mock_get.return_value.ok = False 
 
         res = self.spotify_service.get_current_user()
         self.assertEqual("error", res)

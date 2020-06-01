@@ -6,7 +6,7 @@ import sys
 
 spotify_auth = Blueprint('spotify_auth', __name__, template_folder='templates')
 
-secrets_file = open("secrets/spotify_client_secret.json")
+secrets_file = open("secrets/spotify_client_secrets.json")
 secrets = json.load(secrets_file)
 
 #  Client Keys
@@ -22,7 +22,7 @@ SPOTIFY_API_URL = "{}/{}".format(SPOTIFY_API_BASE_URL, API_VERSION)
 # Server-side Parameters
 CLIENT_SIDE_URL = "http://127.0.0.1"
 PORT = 8080
-REDIRECT_URI = "{}:{}/callback".format(CLIENT_SIDE_URL, PORT)
+REDIRECT_URI = "http://localhost:8080/spotify/oauth2callback" #"{}:{}/spotify/oauth2callback".format(CLIENT_SIDE_URL, PORT)
 SCOPE = "playlist-modify-public playlist-modify-private ugc-image-upload user-read-playback-state streaming user-read-email playlist-read-collaborative user-modify-playback-state user-read-private user-library-modify user-top-read user-read-currently-playing app-remote-control user-read-recently-played user-library-read"
 STATE = ""
 SHOW_DIALOG_bool = True
@@ -38,15 +38,15 @@ auth_query_parameters = {
 }
 
 
-@auth.route("/authorize")
-def index():
+@spotify_auth.route("/authorize")
+def authorize():
     # Authorization
     url_args = "&".join(["{}={}".format(key, quote(val)) for key, val in auth_query_parameters.items()])
     auth_url = "{}/?{}".format(SPOTIFY_AUTH_URL, url_args)
     return redirect(auth_url)
 
 
-@auth.route("/oauth2callback")
+@spotify_auth.route("/oauth2callback")
 def oauth2callback():
     # Requests refresh and access tokens
     auth_token = request.args['code']
@@ -61,6 +61,7 @@ def oauth2callback():
 
     # Tokens are Returned to Application
     response_data = json.loads(post_request.text)
+    print("token", response_data["access_token"])
     session["spotify_credentials"] = response_data["access_token"]
 
     return "authenticated"
