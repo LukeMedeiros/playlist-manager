@@ -105,15 +105,17 @@ class YoutubePlaylistService(PlaylistService):
 
     def search_playlist_tracks(self, tracks: List[Track]):
         track_ids = [] 
+        missing_tracks = []
 
         for track in tracks: 
             response = self.query_track(track)
             # response might not always have tracks 
             if len(response['items']) == 0: 
+                missing_tracks.append(track)
                 continue
             track_id = response['items'][0]['id']['videoId']
             track_ids.append(track_id)
-        return track_ids
+        return {"track_ids" : track_ids, "missing_tracks" : missing_tracks}
 
     def remove_existing_tracks(self, playlist_id: Playlist, tracks: List[Track]) -> List[Track]: 
         tracks_to_remove = []
@@ -141,15 +143,15 @@ class YoutubePlaylistService(PlaylistService):
                 # that are already found in the playlist so we dont end up searching for 
                 # duplicates 
                 cleaned_tracks = self.remove_existing_tracks(my_playlist.id, playlist.tracks)
-                track_ids = self.search_playlist_tracks(cleaned_tracks)
-                self.update_playlist(my_playlist.id, track_ids)
+                track_results = self.search_playlist_tracks(cleaned_tracks)
+                self.update_playlist(my_playlist.id, track_results["track_ids"])
                 # what shitty return types, I should definitely beable to see the 
                 # songs that were and werent added in the response 
-                return 'playlist updated'
+                return track_results["missing_tracks"]
         
-        track_ids = self.search_playlist_tracks(playlist.tracks)
-        self.create_playlist(playlist.title, track_ids)
-        return 'playlist created'
+        track_results = self.search_playlist_tracks(playlist.tracks)
+        self.create_playlist(playlist.title, track_results["track_ids"])
+        return track_results["missing_tracks"] 
 
     def insert_track(self, playlist_id, track_id): 
         request = self.youtube.playlistItems().insert(
@@ -176,7 +178,9 @@ class YoutubePlaylistService(PlaylistService):
 
         # then compare the lists and remove any duplicate tracks 
         track_ids_to_add = self.remove_existing(self.remove_duplicates(track_ids), self.remove_duplicates(playlist_ids))
-
+        # if there are no tracks to add this request shouldnt be made 
+        if len(track_ids_to_add) == 0: 
+            return track_ids_to_add
         for track_id in track_ids_to_add: 
             self.insert_track(playlist_id, track_id)
             # validate response 

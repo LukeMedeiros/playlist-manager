@@ -7,6 +7,10 @@ class Track:
         self.artist = artist 
         self.album = album
 
+    def __repr__(self): 
+        return "{ id: " + self.id +", name: " + self.name +", artist: " + self.artist + ", album: " + self.album +"}"
+
+
 class DeezerTrack(Track):
     def __init__(self, id, name, artist, album, isrc=""):
         Track.__init__(self, id, name, artist, album) 

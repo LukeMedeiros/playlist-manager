@@ -199,7 +199,7 @@ class UpdatePlaylistTest(unittest.TestCase):
         self.deezer_service.remove_existing = Mock(return_value = [69223545])
 
         updated_successfully = self.deezer_service.update_playlist(7636096362, [69223545])
-        self.assertEqual(updated_successfully, "true")
+        self.assertEqual(updated_successfully, [69223545])
 
     @patch('controllers.deezer_playlist_service.flask.session')
     @patch('controllers.deezer_playlist_service.requests.post')
@@ -211,7 +211,7 @@ class UpdatePlaylistTest(unittest.TestCase):
         self.deezer_service.remove_existing = Mock(return_value = [69223545])
 
         auth_error = self.deezer_service.update_playlist(7636096362, [69223545])
-        self.assertEqual(auth_error, deezer_data.errors[200])
+        self.assertEqual(auth_error["error"]["type"], deezer_data.errors[200])
 
 class SyncPlaylistTest(unittest.TestCase): 
     
@@ -221,21 +221,23 @@ class SyncPlaylistTest(unittest.TestCase):
     def test_sync_by_update(self):
         playlist_mock = deezer_data.playlist_mock
         self.deezer_service.get_my_playlists = Mock(return_value = [playlist_mock])
-        self.deezer_service.search_playlist_tracks = Mock(return_value = deezer_data.track_ids_mock)
-        self.deezer_service.update_playlist = Mock(return_value = "true")
+        self.deezer_service.search_playlist_tracks = Mock(return_value = {"track_ids": deezer_data.track_ids_mock, "missing_tracks" : []})
+        self.deezer_service.update_playlist = Mock(return_value = deezer_data.track_ids_mock)
 
         res = self.deezer_service.sync_playlist(playlist_mock)
-        self.assertEqual(res, "playlist updated")
+        self.assertEqual(res, deezer_data.track_ids_mock)
 
     def test_sync_by_create(self):
         playlist_mock = deezer_data.playlist_mock
         self.deezer_service.get_my_playlists = Mock(return_value = [])
-        self.deezer_service.search_playlist_tracks = Mock(return_value = deezer_data.track_ids_mock)
+        self.deezer_service.search_playlist_tracks = Mock(return_value = {"track_ids": deezer_data.track_ids_mock, "missing_tracks" : []})
         self.deezer_service.create_playlist = Mock(return_value = 7636068622)
-        self.deezer_service.update_playlist = Mock(return_value = "true")
+        self.deezer_service.update_playlist = Mock(return_value = deezer_data.track_ids_mock)
 
         res = self.deezer_service.sync_playlist(playlist_mock)
-        self.assertEqual(res, "playlist created")
+        self.assertEqual(res, deezer_data.track_ids_mock)
+
+# need to test SearchTracks
 
 if __name__ == '__main__':
     unittest.main()

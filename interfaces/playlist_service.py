@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from objects.track import Track
 from objects.playlist import Playlist
-from typing import List
+from typing import List, Dict
 
 class PlaylistService(ABC):
 
@@ -17,9 +17,31 @@ class PlaylistService(ABC):
     def search_playlist_tracks(self, tracks: Track):
         pass
 
-    @abstractmethod
-    def sync_playlist(self, playlist: Playlist):
-        pass
+    def sync_playlist(self, playlist: Playlist) -> List[Track]:
+        my_playlists = self.get_my_playlists()
+
+        # getting all tracks
+        track_results = self.search_playlist_tracks(playlist.tracks)
+
+        # check if the playlist title exists in the current library
+        for my_playlist in my_playlists:
+            if playlist.title == my_playlist.title:
+                # update the current playlist
+                res = self.update_playlist(my_playlist.id, track_results["track_ids"])
+
+                if res == "true":
+                    # maybe should give more information
+                    return {"tracks_added" : res, "tracks_not_found" : track_results["missing_tracks"] }
+                return res  
+        
+        # create a new playlist 
+        playlist_id = self.create_playlist(playlist.title)
+        res = self.update_playlist(playlist_id, track_results["track_ids"])
+
+        if res == "true":
+            # maybe should give more information
+            return {"tracks_added" : res, "tracks_not_found" : track_results["missing_tracks"] }
+        return res  
 
     @abstractmethod
     def update_playlist(self, playlist_id: int, track_ids: List[int]):

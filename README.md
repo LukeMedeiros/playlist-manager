@@ -28,13 +28,21 @@ However, a server is needed in order receive auth tokens from the respective str
 ### authentication
 http://localhost:8080/youtube/authorize 
 
-http://localhost:8080/deezer/authorize 
+<!-- currently set up so that this end point redirects to authenticate all of the services -->
+http://localhost:8080/deezer/authorize
+
+http://localhost:8080/spotify/authorize 
 
 ### sync deezer playlists with youtube 
-http://localhost:8080/sync/deezer?id=your_playlist_id
+http://localhost:8080/sync/deezer?id=your_playlist_id&streaming_services=comma_seperated_list_of_streaming_services
+ex. 
+http://localhost:8080/sync/deezer?id=7293283904&streaming_services=spotify
 
 ### sync youtube playlists with deezer 
 http://localhost:8080/sync/youtube?id=your_playlist_id
 
 ### sync playlists across streaming services with common name 
 http://localhost:8080/sync?title=playlist_name
+
+## Running Tests 
+python -m unittest discover tests "*_tests.py"

@@ -12,19 +12,23 @@ import json
 sync = Blueprint('sync', __name__, template_folder='templates')
 
 @sync.route("/youtube")
+# duplicate code, same as synce_deezer & sync_spotify
 def sync_youtube_playlist():
     # if 'credentials' not in session:
     #     return redirect('youtube_auth.authorize')
     playlist_id = request.args.get('id')
     streaming_services = request.args.get("streaming_services")
+    result = validate_params(playlist_id, streaming_services, "youtube")
+    if result != "valid": 
+        return result
+
     youtube_service = YoutubePlaylistService()
     sync_playlist(youtube_service, playlist_id, streaming_services)
-    return "synced youtube playlist with deezer successfully"
+    return "synced youtube playlist with: " + streaming_services
 
 @sync.route("/deezer")
 def sync_deezer_playlist():
     # before anything it should validate the token
-
     playlist_id = request.args.get('id')
     streaming_services = request.args.get("streaming_services")
     result = validate_params(playlist_id, streaming_services, "deezer") 

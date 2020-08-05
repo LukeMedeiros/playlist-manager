@@ -78,14 +78,14 @@ class SearchTrackTest(unittest.TestCase):
         mock_session.return_value = None
         self.spotify_service.search_playlist_track = Mock(return_value = spotify_data.track_search_json_mock)
         res = self.spotify_service.search_playlist_tracks(spotify_data.tracks)
-        self.assertEqual(res, spotify_data.track_ids)
+        self.assertEqual(res['track_ids'], spotify_data.track_ids)
 
     @patch("controllers.spotify_playlist_service.session")
     def test_get_playlists_authenticated_looponce(self, mock_session): 
         mock_session.return_value = None
         self.spotify_service.search_playlist_track = Mock(side_effect = [spotify_data.no_results_mock, spotify_data.track_search_json_mock])
         res = self.spotify_service.search_playlist_tracks(spotify_data.tracks)
-        self.assertEqual(res, spotify_data.track_ids)
+        self.assertEqual(res['track_ids'], spotify_data.track_ids)
 
     @patch("controllers.spotify_playlist_service.session")
     def test_get_playlists_unauthenticated(self, mock_session): 
@@ -93,6 +93,9 @@ class SearchTrackTest(unittest.TestCase):
         self.spotify_service.search_playlist_track = Mock(return_value = spotify_data.invalid_token_mock)
         res = self.spotify_service.search_playlist_tracks(spotify_data.tracks)
         self.assertEqual(res, spotify_data.invalid_token_mock)
+
+    # probably should test to see what songs are returned when a song isnt found
+    
 
 class UpdatePlaylistTest(unittest.TestCase): 
 
@@ -189,7 +192,7 @@ class SyncPlaylistTest(unittest.TestCase):
 
     def test_sync_playlist_update(self): 
         self.spotify_service.get_my_playlists = Mock(return_value = spotify_data.playlists_mock)
-        self.spotify_service.search_playlist_tracks = Mock(return_value = spotify_data.track_ids)
+        self.spotify_service.search_playlist_tracks = Mock(return_value ={"track_ids" : spotify_data.track_ids, "missing_tracks" : []})
         self.spotify_service.update_playlist = Mock(return_value = spotify_data.track_ids)
 
         res = self.spotify_service.sync_playlist(spotify_data.playlist_mock)
@@ -198,7 +201,7 @@ class SyncPlaylistTest(unittest.TestCase):
 
     def test_sync_playlist_create(self): 
         self.spotify_service.get_my_playlists = Mock(return_value = [])
-        self.spotify_service.search_playlist_tracks = Mock(return_value = spotify_data.track_ids)
+        self.spotify_service.search_playlist_tracks = Mock(return_value = {"track_ids" : spotify_data.track_ids, "missing_tracks" : []})
         self.spotify_service.create_playlist = Mock(return_value = "6UFxJtxcVnP9tzmt4mnuJS")
         self.spotify_service.update_playlist = Mock(return_value = spotify_data.track_ids)
 

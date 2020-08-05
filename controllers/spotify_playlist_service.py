@@ -61,6 +61,7 @@ class SpotifyPlaylistService(PlaylistService):
     def search_playlist_tracks(self, tracks: Track):
         # need to query without the artist aswell 
         track_ids = []
+        missing_tracks = []
         header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
         for track in tracks: 
             track_name = track.name
@@ -79,28 +80,27 @@ class SpotifyPlaylistService(PlaylistService):
                 res = self.search_playlist_track(track.name, header)
                 
             if res["tracks"]["total"] == 0 : 
-                print('no match: ', track_name, track.artist)
-                continue
+                missing_tracks.append(track)
             else: 
                 track_ids.append(res["tracks"]["items"][0]["id"])
 
-        return track_ids
+        return {"track_ids" : track_ids, "missing_tracks" : missing_tracks}
 
-    def sync_playlist(self, playlist: Playlist):
-        my_playlists = self.get_my_playlists()
-        track_ids = self.search_playlist_tracks(playlist.tracks)
+    # def sync_playlist(self, playlist: Playlist):
+    #     my_playlists = self.get_my_playlists()
+    #     track_ids = self.search_playlist_tracks(playlist.tracks)
 
-        for my_playlist in my_playlists: 
-            if playlist.title == my_playlist.title: 
-                res = self.update_playlist(my_playlist.id, track_ids)
-                # res is the track ids which were added, or an error if unsuccessful
-                return res
+    #     for my_playlist in my_playlists: 
+    #         if playlist.title == my_playlist.title: 
+    #             res = self.update_playlist(my_playlist.id, track_ids)
+    #             # res is the track ids which were added, or an error if unsuccessful
+    #             return res
         
-        playlist_id = self.create_playlist(playlist.title)
-        print("playlist_id", playlist_id)
+    #     playlist_id = self.create_playlist(playlist.title)
+    #     print("playlist_id", playlist_id)
 
-        res = self.update_playlist(playlist_id, track_ids)
-        return res
+    #     res = self.update_playlist(playlist_id, track_ids)
+    #     return res
 
     def update_playlist(self, playlist_id: int, track_ids: List[int]):
         header = { "Authorization" : "Bearer " + session[constants.SPOTIFY_CREDENTIALS]}
@@ -111,6 +111,9 @@ class SpotifyPlaylistService(PlaylistService):
             playlist_track_ids.append(track.id)
 
         tracks_to_add = self.remove_existing(track_ids, playlist_track_ids)
+        # if there are no tracks to add this request shouldnt be made 
+        if len(tracks_to_add) == 0: 
+            return tracks_to_add
         str_ids = "spotify:track:" + ',spotify:track:'.join(str(id) for id in tracks_to_add)
         URI = constants.GET_SPOTIFY_PLAYLIST_URI + "{0}/tracks?uris={1}".format(playlist_id, str_ids)
         res = requests.post(URI, headers = header).json()
