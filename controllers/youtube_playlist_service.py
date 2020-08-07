@@ -7,6 +7,7 @@ import flask
 from interfaces.playlist_service import PlaylistService
 from typing import List
 import difflib
+import time
 
 class YoutubePlaylistService(PlaylistService): 
 
@@ -74,7 +75,8 @@ class YoutubePlaylistService(PlaylistService):
     def get_my_playlists(self):
         request = self.youtube.playlists().list(
                 part="snippet",
-                mine=True
+                mine=True,
+                maxResults = 50
             )
         res = request.execute()
         my_playlists = []
@@ -136,7 +138,6 @@ class YoutubePlaylistService(PlaylistService):
 
     def sync_playlist(self, playlist):
         my_playlists = self.get_my_playlists()
-
         for my_playlist in my_playlists: 
             if playlist.title == my_playlist.title:
                 # since youtube imposes such a low quota we need to remove the songs
@@ -144,14 +145,22 @@ class YoutubePlaylistService(PlaylistService):
                 # duplicates 
                 cleaned_tracks = self.remove_existing_tracks(my_playlist.id, playlist.tracks)
                 track_results = self.search_playlist_tracks(cleaned_tracks)
-                self.update_playlist(my_playlist.id, track_results["track_ids"])
+                res = self.update_playlist(my_playlist.id, track_results["track_ids"])
+                if "error" in res: 
+                    return res
                 # what shitty return types, I should definitely beable to see the 
                 # songs that were and werent added in the response 
-                return track_results["missing_tracks"]
+                return {"tracks_added" : res, "missing_tracks" : track_results["missing_tracks"]}
         
         track_results = self.search_playlist_tracks(playlist.tracks)
-        self.create_playlist(playlist.title, track_results["track_ids"])
-        return track_results["missing_tracks"] 
+        playlist_id = self.create_playlist(playlist.title)
+        time.sleep(5)
+        res = self.update_playlist(playlist_id, track_results["track_ids"])
+        if "error" in res: 
+            return res
+        # what shitty return types, I should definitely beable to see the 
+        # songs that were and werent added in the response 
+        return {"tracks_added" : res, "missing_tracks" : track_results["missing_tracks"]}
 
     def insert_track(self, playlist_id, track_id): 
         request = self.youtube.playlistItems().insert(
@@ -182,10 +191,13 @@ class YoutubePlaylistService(PlaylistService):
         if len(track_ids_to_add) == 0: 
             return track_ids_to_add
         for track_id in track_ids_to_add: 
-            self.insert_track(playlist_id, track_id)
+            res = self.insert_track(playlist_id, track_id)
+            if "error" in res: 
+                return res
             # validate response 
+        return track_ids_to_add
 
-    def create_playlist(self, playlist_title, track_ids):
+    def create_playlist(self, playlist_title):
         request = self.youtube.playlists().insert(
             part="snippet", 
             body={
@@ -195,8 +207,7 @@ class YoutubePlaylistService(PlaylistService):
             }
         )
         response = request.execute()
-        playlist_id = response['id'] 
-        self.update_playlist(playlist_id, track_ids)
+        return  response['id'] 
 
     # # duplicate code remove TODO 
     # def remove_existing(self, tracks_to_add, playlist_tracks):

@@ -33,13 +33,17 @@ http://localhost:8080/deezer/authorize
 
 http://localhost:8080/spotify/authorize 
 
-### sync deezer playlists with youtube 
+### sync deezer playlists with other services 
 http://localhost:8080/sync/deezer?id=your_playlist_id&streaming_services=comma_seperated_list_of_streaming_services
 ex. 
 http://localhost:8080/sync/deezer?id=7293283904&streaming_services=spotify
 
-### sync youtube playlists with deezer 
-http://localhost:8080/sync/youtube?id=your_playlist_id
+### sync youtube playlists with other services 
+http://localhost:8080/sync/youtube?id=your_playlist_id&streaming_services=comma_seperated_list_of_streaming_services
+
+### sync spotify playlists with other services 
+
+http://localhost:8080/sync/spotify?id=your_playlist_id&streaming_services=comma_seperated_list_of_streaming_services
 
 ### sync playlists across streaming services with common name 
 http://localhost:8080/sync?title=playlist_name

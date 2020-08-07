@@ -40,17 +40,24 @@ def sync_deezer_playlist():
     # temporary patch 
     if result == "invalid id": 
         return result 
-    return "synced deezer playlist with : " + streaming_services
+    return "synced deezer playlist with : ".join(streaming_services)
 
 @sync.route("/spotify")
 def sync_spotify_playlist():
     # before anything it should validate the token
     playlist_id = request.args.get('id')
     streaming_services = request.args.get("streaming_services")
+    result = validate_params(playlist_id, streaming_services, "spotify") 
+    if result != "valid":
+        return result 
+
     spotify_service = SpotifyPlaylistService()
-    sync_playlist(spotify_service, playlist_id, streaming_services)
+    streaming_services = streaming_services.split(",")
+    result = sync_playlist(spotify_service, playlist_id, streaming_services)
+    if result == "invalid id": 
+        return result
     # need to create a better return message
-    return "synced spotify playlist with: " + streaming_services
+    return "synced spotify playlist with: " + "".join(streaming_services)
 
 # TODO need to add spotify support
 @sync.route('')
@@ -59,11 +66,13 @@ def sync_across_streaming_services():
 
     deezer_service = DeezerPlaylistService()
     deezer_playlist_id = get_playlist_by_title(deezer_service, playlist_title)
+    print("deezer ", deezer_playlist_id)
     if deezer_playlist_id == None: 
         return "No deezer playlist found with title: " + playlist_title
     
     youtube_service = YoutubePlaylistService()
     youtube_playlist_id = get_playlist_by_title(youtube_service, playlist_title)
+    print("youtube ", youtube_playlist_id)
     if youtube_playlist_id == None: 
         return "No youtube playlist found with title: " + playlist_title
     
@@ -74,17 +83,17 @@ def sync_across_streaming_services():
 
 def get_playlist_by_title(playlist_service: PlaylistService, playlist_title):
     playlists = playlist_service.get_my_playlists()
-    playlist_id = None
     for playlist in playlists: 
         if playlist.title == playlist_title:
-            playlist_id = playlist.id
-            break
-    return playlist_id
+            print(playlist.id)
+            return playlist.id
+    return None
 
 def sync_playlist(playlist_service: PlaylistService, playlist_id: str, sync_with: List[str]):
     # id passed could not exist 
     playlist_to_sync = playlist_service.get_playlist(playlist_id)
     if type(playlist_to_sync) != Playlist: 
+        # many potential errors may fall here, especially with regards to the auth token
         return "invalid id"
     sync_service = SyncPlaylist()
     sync_service.sync_playlist(playlist_to_sync, sync_with)

@@ -17,7 +17,7 @@ class PlaylistService(ABC):
     def search_playlist_tracks(self, tracks: Track):
         pass
 
-    def sync_playlist(self, playlist: Playlist) -> List[Track]:
+    def sync_playlist(self, playlist: Playlist):
         my_playlists = self.get_my_playlists()
 
         # getting all tracks
@@ -29,19 +29,20 @@ class PlaylistService(ABC):
                 # update the current playlist
                 res = self.update_playlist(my_playlist.id, track_results["track_ids"])
 
-                if res == "true":
-                    # maybe should give more information
-                    return {"tracks_added" : res, "tracks_not_found" : track_results["missing_tracks"] }
-                return res  
+                if "error" in res:
+                    return res
+                # maybe should give more information
+                return {"tracks_added" : res, "tracks_not_found" : track_results["missing_tracks"]}
+                
         
         # create a new playlist 
         playlist_id = self.create_playlist(playlist.title)
         res = self.update_playlist(playlist_id, track_results["track_ids"])
 
-        if res == "true":
-            # maybe should give more information
-            return {"tracks_added" : res, "tracks_not_found" : track_results["missing_tracks"] }
-        return res  
+        if "error" in res:
+            return res
+        # maybe should give more information
+        return {"tracks_added" : res, "tracks_not_found" : track_results["missing_tracks"]} 
 
     @abstractmethod
     def update_playlist(self, playlist_id: int, track_ids: List[int]):

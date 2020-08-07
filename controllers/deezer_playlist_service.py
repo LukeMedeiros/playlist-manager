@@ -59,7 +59,7 @@ class DeezerPlaylistService(PlaylistService):
             else: 
                 missing_tracks.append(track)
         
-        return {"track_id" : track_ids, "missing_tracks" : missing_tracks}
+        return {"track_ids" : track_ids, "missing_tracks" : missing_tracks}
 
     def get_my_playlists(self):
         URI = 'https://api.deezer.com/user/me?access_token={0}'.format(flask.session['deezer_credentials'])
